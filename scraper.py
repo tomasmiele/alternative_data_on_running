@@ -31,8 +31,8 @@ def start_browser():
     options.headless = False  
     return webdriver.Chrome(options=options)
 
-def get_on_reviews(driver, gender):
-    on_running_men = website + "/on-running-shoes"
+def get_on_reviews(driver, brand, gender):
+    on_running_men = website + f"/{brand}-running-shoes"
 
     wait = WebDriverWait(driver, 15)
     driver.get(on_running_men)
@@ -74,56 +74,74 @@ def get_on_reviews(driver, gender):
 
     time.sleep(2)
 
-    shoes = driver.find_elements(By.CSS_SELECTOR, "li.product_list.no_prices")
     data = []
 
-    for shoe in shoes:
-        try:
-            link_element = shoe.find_element(By.CSS_SELECTOR, ".product-name a")
-            name = link_element.text.strip()
-            relative_link = link_element.get_attribute("href")
-        except:
-            name = None
-            relative_link = None
+    while True:
+        time.sleep(2)
 
-        try:
-            score = shoe.find_element(By.CSS_SELECTOR, ".corescore-big__score").text.strip()
-        except:
-            score = None
-        try:
-            adjective = shoe.find_element(By.CSS_SELECTOR, ".corescore-big__text").text.strip()
-        except:
-            adjective = None
+        shoes = driver.find_elements(By.CSS_SELECTOR, "li.product_list.no_prices")
 
-        pros, cons = [], []
-
-        if relative_link:
-            driver.execute_script("window.open('');")
-            driver.switch_to.window(driver.window_handles[1])
-            driver.get(relative_link)
-            time.sleep(1)
+        for shoe in shoes:
+            try:
+                link_element = shoe.find_element(By.CSS_SELECTOR, ".product-name a")
+                name = link_element.text.strip()
+                relative_link = link_element.get_attribute("href")
+            except:
+                name = None
+                relative_link = None
 
             try:
-                pros_elements = driver.find_elements(By.CSS_SELECTOR, "#the_good li")
-                pros = [p.text.strip() for p in pros_elements if p.text.strip()]
+                score = shoe.find_element(By.CSS_SELECTOR, ".corescore-big__score").text.strip()
             except:
-                pros = []
-
+                score = None
             try:
-                cons_elements = driver.find_elements(By.CSS_SELECTOR, "#the_bad li")
-                cons = [c.text.strip() for c in cons_elements if c.text.strip()]
+                adjective = shoe.find_element(By.CSS_SELECTOR, ".corescore-big__text").text.strip()
             except:
-                cons = []
+                adjective = None
 
-            driver.close()
-            driver.switch_to.window(driver.window_handles[0])
+            pros, cons = [], []
 
-        data.append({
-            "Name": name,
-            "Score": score,
-            "Adjective": adjective,
-            "Pros": pros,
-            "Cons": cons
-        })
+            if relative_link:
+                driver.execute_script("window.open('');")
+                driver.switch_to.window(driver.window_handles[1])
+                driver.get(relative_link)
+                time.sleep(1)
+
+                try:
+                    pros_elements = driver.find_elements(By.CSS_SELECTOR, "#the_good li")
+                    pros = [p.text.strip() for p in pros_elements if p.text.strip()]
+                except:
+                    pros = []
+
+                try:
+                    cons_elements = driver.find_elements(By.CSS_SELECTOR, "#the_bad li")
+                    cons = [c.text.strip() for c in cons_elements if c.text.strip()]
+                except:
+                    cons = []
+
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
+
+            data.append({
+                "Name": name,
+                "Score": score,
+                "Adjective": adjective,
+                "Pros": pros,
+                "Cons": cons
+            })
+
+        try:
+            next_button = driver.find_element(By.CSS_SELECTOR, "a.paginate-buttons.next-button")
+            next_url = next_button.get_attribute("href")
+            if next_url:
+                driver.get(next_url)
+                print("Indo para próxima página...")
+                time.sleep(2)
+            else:
+                print("Botão de próxima página não tem href. Encerrando.")
+                break
+        except:
+            print("Botão de próxima página não encontrado. Encerrando.")
+            break
 
     return data
