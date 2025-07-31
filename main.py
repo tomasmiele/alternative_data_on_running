@@ -4,6 +4,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 
 from scraper import start_browser, get_reviews
+from pipeline import extract_pros_cons, get_classification, generate_difference_dictionaries, plotar_nuvens
 
 if __name__ == "__main__":
     data = {}
@@ -23,5 +24,10 @@ if __name__ == "__main__":
     # data["Adidas"]["F"] = get_reviews(driver, "adidas", "f")
     # data["New Balance"]["M"] = get_reviews(driver, "new-balance", "m")
     # data["New Balance"]["F"] = get_reviews(driver, "new-balance", "f")
-    print(data)
     driver.quit()
+
+    pros_dict, cons_dict = extract_pros_cons(data)
+    pros_class, cons_class = get_classification(pros_dict, cons_dict)
+    print(pros_class, "\n\n", pros_class)
+    dict_pros, dict_cons = generate_difference_dictionaries(pros_class, cons_class)
+    plotar_nuvens(dict_pros, dict_cons)
