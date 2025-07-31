@@ -3,7 +3,7 @@ import os
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 
-from scraper import start_browser, get_on_reviews
+from scraper import start_browser, get_reviews
 
 if __name__ == "__main__":
     data = {}
@@ -13,15 +13,15 @@ if __name__ == "__main__":
         data[company] = {"M": {}, "F": {}}
 
     driver = start_browser()
-    data["On"]["M"] = get_on_reviews(driver, "on", "m")
-    data["On"]["F"] = get_on_reviews(driver, "on", "f")
-    data["Hoka"]["M"] = get_on_reviews(driver, "hoka", "m")
-    data["Hoka"]["F"] = get_on_reviews(driver, "hoka", "f")
-    data["Nike"]["M"] = get_on_reviews(driver, "nike", "m")
-    data["Nike"]["F"] = get_on_reviews(driver, "nike", "f")
-    data["Adidas"]["M"] = get_on_reviews(driver, "adidas", "m")
-    data["Adidas"]["F"] = get_on_reviews(driver, "adidas", "f")
-    data["New Balance"]["M"] = get_on_reviews(driver, "new-balance", "m")
-    data["New Balance"]["F"] = get_on_reviews(driver, "new-balance", "f")
+    data["On"]["M"] = get_reviews(driver, "on", "m")
+    # data["On"]["F"] = get_reviews(driver, "on", "f")
+    # data["Hoka"]["M"] = get_reviews(driver, "hoka", "m")
+    # data["Hoka"]["F"] = get_reviews(driver, "hoka", "f")
+    # data["Nike"]["M"] = get_reviews(driver, "nike", "m")
+    # data["Nike"]["F"] = get_reviews(driver, "nike", "f")
+    # data["Adidas"]["M"] = get_reviews(driver, "adidas", "m")
+    # data["Adidas"]["F"] = get_reviews(driver, "adidas", "f")
+    # data["New Balance"]["M"] = get_reviews(driver, "new-balance", "m")
+    # data["New Balance"]["F"] = get_reviews(driver, "new-balance", "f")
     print(data)
     driver.quit()

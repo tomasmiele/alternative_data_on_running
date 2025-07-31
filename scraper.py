@@ -31,7 +31,66 @@ def start_browser():
     options.headless = False  
     return webdriver.Chrome(options=options)
 
-def get_on_reviews(driver, brand, gender):
+def apply_filters_and_update_data(driver, data):
+    wait = WebDriverWait(driver, 10)
+
+    filters = {
+        "Terrain": ["Road", "Trail"],
+        "Pace": ["Daily running / easy", "Tempo / speed", "Competition / race"]
+    }
+
+    name_to_entry = {entry["Name"]: entry for entry in data}
+
+    for category, labels in filters.items():
+        for label in labels:
+            print(f"🔽 Aplicando filtro {label} ({category})...")
+
+            try:
+                checkbox_label = wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, f"//span[contains(@class, 'checkbox-label-text') and normalize-space()='{label}']")))
+                driver.execute_script("arguments[0].click();", checkbox_label)
+                time.sleep(2)
+            except Exception as e:
+                print(f"❌ Erro ao aplicar filtro {label}: {e}")
+                continue
+
+            while True:
+                time.sleep(1)
+                shoes = driver.find_elements(By.CSS_SELECTOR, "li.product_list.no_prices")
+
+                for shoe in shoes:
+                    try:
+                        name = shoe.find_element(By.CSS_SELECTOR, ".product-name a").text.strip()
+                        if name in name_to_entry:
+                            if label not in name_to_entry[name][category]:
+                                name_to_entry[name][category].append(label)
+                    except Exception:
+                        continue
+
+                try:
+                    next_button = driver.find_element(By.CSS_SELECTOR, "a.paginate-buttons.next-button")
+                    next_url = next_button.get_attribute("href")
+                    if next_url:
+                        driver.get(next_url)
+                        print("🔁 Indo para próxima página com filtro aplicado...")
+                        time.sleep(2)
+                    else:
+                        break
+                except:
+                    break
+
+            # Desmarca o filtro para não interferir nos próximos
+            try:
+                checkbox_label = wait.until(EC.element_to_be_clickable(
+                    (By.XPATH, f"//span[contains(@class, 'checkbox-label-text') and normalize-space()='{label}']")))
+                driver.execute_script("arguments[0].click();", checkbox_label)
+                time.sleep(1)
+            except:
+                pass
+
+    return list(name_to_entry.values())
+
+def get_reviews(driver, brand, gender):
     on_running_men = website + f"/{brand}-running-shoes"
 
     wait = WebDriverWait(driver, 15)
@@ -127,7 +186,9 @@ def get_on_reviews(driver, brand, gender):
                 "Score": score,
                 "Adjective": adjective,
                 "Pros": pros,
-                "Cons": cons
+                "Cons": cons,
+                "Terrain": [],
+                "Pace": []
             })
 
         try:
@@ -143,5 +204,7 @@ def get_on_reviews(driver, brand, gender):
         except:
             print("Botão de próxima página não encontrado. Encerrando.")
             break
+
+    data = apply_filters_and_update_data(driver, data)
 
     return data
