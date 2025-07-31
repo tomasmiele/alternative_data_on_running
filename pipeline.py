@@ -4,6 +4,8 @@ from collections import Counter
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import streamlit as st
+from collections import defaultdict
 
 stopwords_set = set(stopwords.words("english"))
 
@@ -113,31 +115,171 @@ def generate_difference_dictionaries(pros, cons, top_n=100):
 
     return positive_dict, negative_dict
 
-def plotar_nuvens(dict_positividade, dict_negatividade):
-    wordcloud_pos = WordCloud(
+def plot_wordcloud_streamlit(word_freq_dict, title, font_path=None):
+    wc = WordCloud(
         width=1000, height=500,
-        background_color='white',
-        max_words=100,
-        min_font_size=10,
-        relative_scaling=0.5
-    ).generate_from_frequencies(dict_positividade)
+        background_color="white",
+        font_path=font_path
+    ).generate_from_frequencies(word_freq_dict)
 
-    wordcloud_neg = WordCloud(
-        width=1000, height=500,
-        background_color='white',
-        max_words=100,
-        min_font_size=10,
-        relative_scaling=0.5
-    ).generate_from_frequencies(dict_negatividade)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.set_title(title)
+    ax.imshow(wc, interpolation="bilinear")
+    ax.axis("off")
+    st.pyplot(fig)
 
-    plt.figure(figsize=(12, 6))
-    plt.title("Palavras que indicam Positividade")
-    plt.imshow(wordcloud_pos, interpolation='bilinear')
-    plt.axis("off")
-    plt.show()
+def compute_score_aggregates_with_gender(data):
+    def nested_dict(): 
+        return defaultdict(list)
 
-    plt.figure(figsize=(12, 6))
-    plt.title("Palavras que indicam Negatividade")
-    plt.imshow(wordcloud_neg, interpolation='bilinear')
-    plt.axis("off")
-    plt.show()
+    brand_scores = defaultdict(list)
+    terrain_scores = defaultdict(nested_dict)
+    pace_scores = defaultdict(nested_dict)
+    year_scores = defaultdict(nested_dict)
+
+    masc_scores = defaultdict(list)
+    fem_scores = defaultdict(list)
+
+    for brand, genders in data.items():
+        for gender, shoes in genders.items():
+            for shoe in shoes:
+                try:
+                    score = float(shoe["Score"])
+                except (ValueError, TypeError):
+                    continue
+
+                brand_scores[brand].append(score)
+
+                if gender == "M":
+                    masc_scores[brand].append(score)
+                elif gender == "F":
+                    fem_scores[brand].append(score)
+
+                for terrain in shoe.get("Terrain", []):
+                    terrain_scores[terrain][brand].append(score)
+
+                for pace in shoe.get("Pace", []):
+                    pace_scores[pace][brand].append(score)
+
+                year = shoe.get("Release Year")
+                if year:
+                    year_scores[str(year)][brand].append(score)
+
+    def avg(lst):
+        return round(sum(lst) / len(lst), 2) if lst else None
+
+    def process_nested(d):
+        return {
+            key: {
+                subkey: avg(scores)
+                for subkey, scores in subdict.items()
+            } for key, subdict in d.items()
+        }
+
+    return {
+        "brand": {brand: avg(scores) for brand, scores in brand_scores.items()},
+        "terrain": process_nested(terrain_scores),
+        "pace": process_nested(pace_scores),
+        "year": process_nested(year_scores),
+        "masc": {brand: avg(scores) for brand, scores in masc_scores.items()},
+        "fem": {brand: avg(scores) for brand, scores in fem_scores.items()}
+    }
+
+def compare_to_others(data, brand="On"):
+    result = defaultdict(lambda: defaultdict(list))
+
+    def format_msg(category, subkey, brand_score, other_brand, other_score):
+        return f"A {brand} está com uma avaliação baixa em {category} ({subkey}) ({brand_score}) enquanto a {other_brand} apresenta bom desempenho ({other_score})"
+
+    def check_and_add(category_name, subkey, brand_score, other_brand, other_score):
+        if brand_score < other_score:
+            msg = format_msg(category_name, subkey, brand_score, other_brand, other_score)
+            result[other_brand][category_name].append(msg)
+
+    for terrain, brands in data.get("terrain", {}).items():
+        if brand not in brands:
+            continue
+        for other_brand, other_score in brands.items():
+            if other_brand == brand:
+                continue
+            check_and_add("terrain", terrain, brands[brand], other_brand, other_score)
+
+    for pace, brands in data.get("pace", {}).items():
+        if brand not in brands:
+            continue
+        for other_brand, other_score in brands.items():
+            if other_brand == brand:
+                continue
+            check_and_add("pace", pace, brands[brand], other_brand, other_score)
+
+    for year, brands in data.get("year", {}).items():
+        if brand not in brands:
+            continue
+        for other_brand, other_score in brands.items():
+            if other_brand == brand:
+                continue
+            check_and_add("year", year, brands[brand], other_brand, other_score)
+
+    if "masc" in data and brand in data["masc"]:
+        for other_brand, other_score in data["masc"].items():
+            if other_brand == brand:
+                continue
+            check_and_add("gender", "masculino", data["masc"][brand], other_brand, other_score)
+
+    if "fem" in data and brand in data["fem"]:
+        for other_brand, other_score in data["fem"].items():
+            if other_brand == brand:
+                continue
+            check_and_add("gender", "feminino", data["fem"][brand], other_brand, other_score)
+
+    return {k: dict(v) for k, v in result.items()}
+
+def compare_others_below(data, brand="On"):
+    result = defaultdict(lambda: defaultdict(list))
+
+    def format_msg(other_brand, category, subkey, diff):
+        return f"{other_brand} está {diff:.1f} pontos abaixo da {brand} na categoria {subkey} ({category})"
+
+    def check_and_add(category_name, subkey, brand_score, other_brand, other_score):
+        if other_score < brand_score:
+            diff = brand_score - other_score
+            msg = format_msg(other_brand, category_name, subkey, diff)
+            result[other_brand][category_name].append(msg)
+
+    for terrain, brands in data.get("terrain", {}).items():
+        if brand not in brands:
+            continue
+        for other_brand, other_score in brands.items():
+            if other_brand == brand:
+                continue
+            check_and_add("terrain", terrain, brands[brand], other_brand, other_score)
+
+    for pace, brands in data.get("pace", {}).items():
+        if brand not in brands:
+            continue
+        for other_brand, other_score in brands.items():
+            if other_brand == brand:
+                continue
+            check_and_add("pace", pace, brands[brand], other_brand, other_score)
+
+    for year, brands in data.get("year", {}).items():
+        if brand not in brands:
+            continue
+        for other_brand, other_score in brands.items():
+            if other_brand == brand:
+                continue
+            check_and_add("year", year, brands[brand], other_brand, other_score)
+
+    if "masc" in data and brand in data["masc"]:
+        for other_brand, other_score in data["masc"].items():
+            if other_brand == brand:
+                continue
+            check_and_add("gender", "masculino", data["masc"][brand], other_brand, other_score)
+
+    if "fem" in data and brand in data["fem"]:
+        for other_brand, other_score in data["fem"].items():
+            if other_brand == brand:
+                continue
+            check_and_add("gender", "feminino", data["fem"][brand], other_brand, other_score)
+
+    return {k: dict(v) for k, v in result.items()}

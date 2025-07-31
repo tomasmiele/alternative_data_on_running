@@ -1,0 +1,16 @@
+{
+  "Hoka": {
+    "terrain": [
+      "Hoka est\u00e1 1.8 pontos abaixo da On na categoria Road (terrain)",
+      "Hoka est\u00e1 2.8 pontos abaixo da On na categoria Trail (terrain)"
+    ],
+    "pace": [
+      "Hoka est\u00e1 1.9 pontos abaixo da On na categoria Daily running / easy (pace)",
+      "Hoka est\u00e1 2.7 pontos abaixo da On na categoria Tempo / speed (pace)",
+      "Hoka est\u00e1 3.4 pontos abaixo da On na categoria Competition / race (pace)"
+    ],
+    "gender": [
+      "Hoka est\u00e1 2.4 pontos abaixo da On na categoria masculino (gender)"
+    ]
+  }
+}

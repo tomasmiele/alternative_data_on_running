@@ -1,0 +1,36 @@
+{
+  "brand": {
+    "On": 87.68,
+    "Hoka": 85.31
+  },
+  "terrain": {
+    "Road": {
+      "On": 87.88,
+      "Hoka": 86.13
+    },
+    "Trail": {
+      "On": 86.5,
+      "Hoka": 83.67
+    }
+  },
+  "pace": {
+    "Daily running / easy": {
+      "On": 87.78,
+      "Hoka": 85.88
+    },
+    "Tempo / speed": {
+      "On": 89.0,
+      "Hoka": 86.3
+    },
+    "Competition / race": {
+      "On": 90.0,
+      "Hoka": 86.6
+    }
+  },
+  "year": {},
+  "masc": {
+    "On": 87.68,
+    "Hoka": 85.31
+  },
+  "fem": {}
+}
