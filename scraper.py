@@ -36,14 +36,23 @@ def apply_filters_and_update_data(driver, data):
 
     filters = {
         "Terrain": ["Road", "Trail"],
-        "Pace": ["Daily running / easy", "Tempo / speed", "Competition / race"]
+        "Pace": ["Daily running / easy", "Tempo / speed", "Competition / race"],
+        "ReleaseYear": ["New", "2024", "2023", "2022", "2021 or older"]
     }
 
-    name_to_entry = {entry["Name"]: entry for entry in data}
+    name_to_entry = {
+        entry["Name"]: {
+            **entry,
+            "Terrain": entry.get("Terrain", []),
+            "Pace": entry.get("Pace", []),
+            "ReleaseYear": entry.get("ReleaseYear", [])
+        }
+        for entry in data
+    }
 
     for category, labels in filters.items():
         for label in labels:
-            print(f"🔽 Aplicando filtro {label} ({category})...")
+            print(f"Aplicando filtro {label} ({category})...")
 
             try:
                 checkbox_label = wait.until(EC.element_to_be_clickable(
@@ -51,7 +60,7 @@ def apply_filters_and_update_data(driver, data):
                 driver.execute_script("arguments[0].click();", checkbox_label)
                 time.sleep(2)
             except Exception as e:
-                print(f"❌ Erro ao aplicar filtro {label}: {e}")
+                print(f"Erro ao aplicar filtro {label}: {e}")
                 continue
 
             while True:
@@ -72,14 +81,13 @@ def apply_filters_and_update_data(driver, data):
                     next_url = next_button.get_attribute("href")
                     if next_url:
                         driver.get(next_url)
-                        print("🔁 Indo para próxima página com filtro aplicado...")
+                        print("Indo para próxima página com filtro aplicado...")
                         time.sleep(2)
                     else:
                         break
                 except:
                     break
 
-            # Desmarca o filtro para não interferir nos próximos
             try:
                 checkbox_label = wait.until(EC.element_to_be_clickable(
                     (By.XPATH, f"//span[contains(@class, 'checkbox-label-text') and normalize-space()='{label}']")))
@@ -188,7 +196,8 @@ def get_reviews(driver, brand, gender):
                 "Pros": pros,
                 "Cons": cons,
                 "Terrain": [],
-                "Pace": []
+                "Pace": [],
+                "ReleaseYear": []
             })
 
         try:
