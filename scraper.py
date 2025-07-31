@@ -31,7 +31,7 @@ def start_browser():
     options.headless = False  
     return webdriver.Chrome(options=options)
 
-def get_on_reviews(driver):
+def get_on_reviews(driver, gender):
     on_running_men = website + "/on-running-shoes"
 
     wait = WebDriverWait(driver, 15)
@@ -43,6 +43,25 @@ def get_on_reviews(driver):
         print("Cookies aceitos.")
     except:
         print("Sem popup de cookies.")
+
+    if gender == "f":
+        try:
+            driver.execute_script("window.scrollTo(0, 0);")
+            time.sleep(1)
+
+            # Seleciona o segundo botão dentro da seleção de gênero
+            gender_buttons = driver.find_elements(By.CSS_SELECTOR, ".gender-select-radio a.gender-select-radio__option")
+            if len(gender_buttons) >= 2:
+                women_button = gender_buttons[1]
+                driver.execute_script("arguments[0].click();", women_button)
+                time.sleep(2)
+                print("Filtro de gênero: Women aplicado.")
+            else:
+                print("Botões de gênero não encontrados.")
+        except Exception as e:
+            print("Erro ao aplicar filtro feminino:", e)
+    else:
+        print("Filtro de gênero: Men (default) aplicado.")
 
     last_height = driver.execute_script("return document.body.scrollHeight")
     while True:
