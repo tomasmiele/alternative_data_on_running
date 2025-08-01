@@ -9,6 +9,8 @@ from collections import defaultdict
 import pandas as pd
 
 stopwords_set = set(stopwords.words("english"))
+brand_names = {"on", "hoka", "nike", "adidas", "new", "balance"}
+stopwords_set.update(brand_names)
 
 def dehyphenize(word):
     if re.fullmatch(r"(?:[a-zA-Z]-){1,}[a-zA-Z]", word):
@@ -387,19 +389,29 @@ def get_top_rated_models(data, brand="On"):
     }
 
 def get_most_negative_comments(data, brand="On", top_k=5):
-    all_cons = []
+    word_scores = defaultdict(list)
 
     if brand not in data:
-        return []
+        return {}
 
     for gender in data[brand]:
         for shoe in data[brand][gender]:
             cons = shoe.get("Cons", [])
-            all_cons.extend(cons)
+            try:
+                score = float(shoe["Score"])
+            except (KeyError, ValueError, TypeError):
+                continue
+            for word in cons:
+                word_scores[word].append(score)
 
-    counter = Counter(all_cons)
-    most_common = [comment for comment, _ in counter.most_common(top_k)]
-    return most_common
+    word_avg_scores = {
+        word: round(sum(scores) / len(scores), 2)
+        for word, scores in word_scores.items() if scores
+    }
+
+    worst_words = dict(sorted(word_avg_scores.items(), key=lambda x: x[1])[:top_k])
+
+    return worst_words
 
 def extract_base_name(name):
     name = name.lower()

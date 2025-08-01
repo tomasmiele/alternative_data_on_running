@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import io
 import base64
+from collections import Counter
 
 def load_json_file(filename):
     with open(f"{filename}.json", "r", encoding="utf-8") as f:
@@ -53,12 +54,18 @@ with col2:
     top_score = top_models_data["top_score"]
     top_models = top_models_data["models"]
 
+    on_avg_score = df.loc["On"]["Avg Score"] if "On" in df.index else None
+
     if top_score > 85:
         color = "#2ecc71"
     elif top_score >= 50:
         color = "#f1c40f"
     else:
         color = "#e74c3c"
+
+    arrow = ""
+    if on_avg_score is not None:
+        arrow = "⬆️" if top_score > on_avg_score else "⬇️"
 
     st.markdown(
         "<h5 style='text-align: center;'>Melhor Tênis da On</h5>",
@@ -72,7 +79,7 @@ with col2:
         colors=[color, "#f0f2f6"],
         wedgeprops={"width": 0.12, "edgecolor": "white"}
     )
-    ax.text(0, 0, f"{top_score}", ha='center', va='center', fontsize=12, fontweight="bold", color=color)
+    ax.text(0, 0, f"{top_score:.1f}{arrow}", ha='center', va='center', fontsize=12, fontweight="bold", color=color)
     ax.axis("equal")
 
     buf = io.BytesIO()
@@ -85,6 +92,13 @@ with col2:
 
     st.markdown(img_html, unsafe_allow_html=True)
 
+    if on_avg_score is not None:
+        st.markdown(
+            f"<p style='text-align: center; font-size: 0.85rem;'>"
+            f"Comparado à média da On ({on_avg_score:.1f})</p>",
+            unsafe_allow_html=True
+        )
+
     st.markdown(
         f"<p style='text-align: center; font-size: 0.9rem;'>"
         f"{' | '.join(f'<b>{model}</b>' for model in top_models)}"
@@ -92,11 +106,21 @@ with col2:
         unsafe_allow_html=True
     )
 
+    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+
 with col3:
-    st.subheader("Comentários Negativos Mais Frequentes da On")
-    worst_comments = load_json_file("worst_on_comments")
-    for comment in worst_comments:
-        st.markdown(f"- {comment}")
+    st.markdown("<h5 style='text-align: left;'>Comentários Negativos Mais Frequentes</h5>", unsafe_allow_html=True)
+
+    word_scores = load_json_file("worst_on_comments")
+    sorted_words = sorted(word_scores.items(), key=lambda x: x[1])
+
+    df_words = pd.DataFrame(sorted_words, columns=["Comentários", "Nota Média"])
+    df_words["Nota Média"] = df_words["Nota Média"].round(1)
+    df_words.reset_index(drop=True, inplace=True)
+
+    st.dataframe(df_words, use_container_width=True, hide_index=True)
+
+st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
 col4, col5, col6 = st.columns(3)
 
