@@ -7,8 +7,13 @@ import matplotlib.pyplot as plt
 import streamlit as st
 from collections import defaultdict
 import pandas as pd
+import nltk
+from nltk.corpus import stopwords
+
+nltk.download("stopwords")
 
 stopwords_set = set(stopwords.words("english"))
+
 brand_names = {"on", "hoka", "nike", "adidas", "new", "balance"}
 stopwords_set.update(brand_names)
 
