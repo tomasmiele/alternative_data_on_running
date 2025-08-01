@@ -6,7 +6,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import io
 import base64
-from collections import Counter
 
 def load_json_file(filename):
     with open(f"{filename}.json", "r", encoding="utf-8") as f:
@@ -111,7 +110,7 @@ with col2:
 
 with col3:
     df_heatmap = heatmap_dataframe(avg_table)
-    selected_category = st.selectbox("", df_heatmap["Categoria"].unique(), label_visibility="collapsed")
+    selected_category = st.selectbox("Selecione a categoria", df_heatmap["Categoria"].unique(), label_visibility="collapsed")
 
     pivot = df_heatmap[df_heatmap["Categoria"] == selected_category].pivot(
         index="Subcategoria", columns="Marca", values="Nota Média"
