@@ -120,13 +120,11 @@ with col3:
 
     st.dataframe(df_words, use_container_width=True, hide_index=True)
 
-st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
-
 col4, col5, col6 = st.columns(3)
 
 with col4:
     dict_pros = load_json_file("positive_words")
-    plot_wordcloud_streamlit(dict_pros, "Positivity")
+    plot_wordcloud_streamlit(dict_pros, "Principais Termos Positivos nas Avaliações")
 
 with col5:
     model_evolution = load_json_file("model_score_evolution")
@@ -177,5 +175,7 @@ with col6:
     )
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
+    sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax, annot_kws={"size": 18})
+    ax.tick_params(axis='x', labelsize=18)
+    ax.tick_params(axis='y', labelsize=12)
     st.pyplot(fig)

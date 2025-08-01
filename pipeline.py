@@ -113,13 +113,13 @@ def generate_difference_dictionaries(pros, cons, top_n=100):
 
 def plot_wordcloud_streamlit(word_freq_dict, title, font_path=None):
     wc = WordCloud(
-        width=1000, height=500,
+        width=1500, height=1000,
         background_color="white",
         font_path=font_path
     ).generate_from_frequencies(word_freq_dict)
 
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.set_title(title)
+    fig, ax = plt.subplots(figsize=(18, 12))
+    ax.set_title(title, fontsize=48)
     ax.imshow(wc, interpolation="bilinear")
     ax.axis("off")
     st.pyplot(fig)
