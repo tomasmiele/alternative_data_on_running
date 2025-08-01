@@ -7,14 +7,48 @@ import matplotlib.pyplot as plt
 import io
 import base64
 
+st.set_page_config(layout="wide")
+st.markdown("""<style>
+    div.block-container {padding-top: 1rem;}
+    .stApp {background-color: #fcfcfc;}
+    section.main > div {padding-top: 0rem;}
+</style>""", unsafe_allow_html=True)
+
+if "aba_atual" not in st.session_state:
+    st.session_state.aba_atual = "concorrencial"
+
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"] {
+        min-width: 160px !important;
+        max-width: 160px !important;
+        background-color: #f2f2f2;
+        padding-top: 30vh !important;
+    }
+    .sidebar-buttons button {
+        width: 120px !important;
+        height: 40px !important;
+        margin: 8px auto !important;
+        display: block;
+        font-size: 14px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+with st.sidebar:
+    st.markdown("<div class='sidebar-buttons'>", unsafe_allow_html=True)
+    if st.button("Concorrência", key="concorrencia"):
+        st.session_state.aba_atual = "concorrencial"
+    if st.button("Visão On", key="on"):
+        st.session_state.aba_atual = "on"
+    st.markdown("</div>", unsafe_allow_html=True)
+
 def load_json_file(filename):
     with open(f"{filename}.json", "r", encoding="utf-8") as f:
         return json.load(f)
-
-st.set_page_config(layout="wide")
-st.markdown("<style>div.block-container {padding-top: 1rem;}</style>", unsafe_allow_html=True)
-st.markdown("<h1 style='text-align: center;'>Análise de Alternativa <em>On Running</em></h1>", unsafe_allow_html=True)
-st.markdown("""<style>.stApp {background-color: #fcfcfc;}</style>""", unsafe_allow_html=True)
 
 avg_table = load_json_file("avg_table")
 brands = set()
@@ -44,71 +78,14 @@ df.index.name = "Brand"
 df = df.sort_index(axis=0).sort_index(axis=1)
 df = df.round(2)
 
-col1, col2, col3 = st.columns(3)
+if st.session_state.aba_atual == "concorrencial":
+    st.markdown("<h1 style='text-align: center;'>Análise Concorrencial</h1>", unsafe_allow_html=True)
 
-with col1:
-    st.dataframe(df)
+    with st.container():
+        _, col_table, _ = st.columns([1, 2.5, 1])
+        with col_table:
+            st.dataframe(df, height=400)
 
-with col2:
-    top_models_data = load_json_file("top_on_models")
-    top_score = top_models_data["top_score"]
-    top_models = top_models_data["models"]
-
-    on_avg_score = df.loc["On"]["Avg Score"] if "On" in df.index else None
-
-    if top_score > 85:
-        color = "#2ecc71"
-    elif top_score >= 50:
-        color = "#f1c40f"
-    else:
-        color = "#e74c3c"
-
-    arrow = ""
-    if on_avg_score is not None:
-        arrow = "⬆️" if top_score > on_avg_score else "⬇️"
-
-    st.markdown(
-        "<h5 style='text-align: center;'>Melhor Tênis da On</h5>",
-        unsafe_allow_html=True
-    )
-
-    fig, ax = plt.subplots(figsize=(1.5, 1.5), dpi=150)
-    ax.pie(
-        [top_score, 100 - top_score],
-        startangle=90,
-        colors=[color, "#f0f2f6"],
-        wedgeprops={"width": 0.12, "edgecolor": "white"}
-    )
-    ax.text(0, 0, f"{top_score:.1f}{arrow}", ha='center', va='center', fontsize=12, fontweight="bold", color=color)
-    ax.axis("equal")
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
-    buf.seek(0)
-    plt.close(fig)
-
-    encoded = base64.b64encode(buf.getvalue()).decode()
-    img_html = f"<div style='text-align: center;'><img src='data:image/png;base64,{encoded}'></div>"
-
-    st.markdown(img_html, unsafe_allow_html=True)
-
-    if on_avg_score is not None:
-        st.markdown(
-            f"<p style='text-align: center; font-size: 0.85rem;'>"
-            f"Comparado à média da On ({on_avg_score:.1f})</p>",
-            unsafe_allow_html=True
-        )
-
-    st.markdown(
-        f"<p style='text-align: center; font-size: 0.9rem;'>"
-        f"{' | '.join(f'<b>{model}</b>' for model in top_models)}"
-        f"</p>",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
-
-with col3:
     df_heatmap = heatmap_dataframe(avg_table)
     selected_category = st.selectbox("Selecione a categoria", df_heatmap["Categoria"].unique(), label_visibility="collapsed")
 
@@ -116,73 +93,124 @@ with col3:
         index="Subcategoria", columns="Marca", values="Nota Média"
     )
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax, annot_kws={"size": 18})
-    ax.tick_params(axis='x', labelsize=18)
-    ax.tick_params(axis='y', labelsize=12)
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax, annot_kws={"size": 12})
+    ax.tick_params(axis='x', labelsize=10)
+    ax.tick_params(axis='y', labelsize=9)
     st.pyplot(fig)
 
-col4, col5, col6 = st.columns(3)
 
-with col4:
-    st.markdown("<h5 style='text-align: left;'>Comentários Negativos Mais Frequentes</h5>", unsafe_allow_html=True)
+elif st.session_state.aba_atual == "on":
+    st.markdown("<h1 style='text-align: center;'>Análise On Running</h1>", unsafe_allow_html=True)
 
-    word_scores = load_json_file("worst_on_comments")
-    sorted_words = sorted(word_scores.items(), key=lambda x: x[1])
+    col1, col_v1, col_v2, col2 = st.columns([1, 0.35, 0.35, 1])
 
-    df_words = pd.DataFrame(sorted_words, columns=["Comentários", "Nota Média"])
-    df_words["Nota Média"] = df_words["Nota Média"].round(1)
-    df_words.reset_index(drop=True, inplace=True)
+    with col1:
+        data = load_json_file("data")
+        model_scores = {}
 
-    st.dataframe(df_words, use_container_width=True, hide_index=True)
+        if "On" in data:
+            seen_models = set()
+            for gender in ['M', 'F']:
+                for shoe in data["On"].get(gender, []):
+                    name = shoe.get("Name")
+                    try:
+                        score = float(shoe.get("Score"))
+                    except (ValueError, TypeError):
+                        continue
+                    if name and name not in seen_models:
+                        seen_models.add(name)
+                        model_scores[name] = score
 
-with col5:
-    model_evolution = load_json_file("model_score_evolution")
+        if model_scores:
+            sorted_models = sorted(model_scores.keys())
+            selected_model = st.selectbox("Modelo", sorted_models, index=0)
+            selected_score = model_scores[selected_model]
 
-    if not model_evolution:
-        st.info("Nenhum modelo com múltiplas versões foi encontrado.")
-    else:
-        evolution_data = []
-        for base_model, versions in model_evolution.items():
-            for model_name, score in versions:
-                clean_version = model_name.replace("On", "").strip()
-                evolution_data.append({
-                    "Base Model": base_model.title(),
-                    "Version": clean_version,
-                    "Score": score
-                })
+            on_avg_score = df.loc["On"]["Avg Score"] if "On" in df.index else None
+            if on_avg_score is not None:
+                if selected_score > on_avg_score:
+                    color = "#2ecc71"
+                    arrow = "⬆️"
+                elif selected_score < on_avg_score - on_avg_score / 10:
+                    color = "#e74c3c"
+                    arrow = "⬇️"
+                else:
+                    color = "#f1c40f"
+                    arrow = "➡️"
+            else:
+                color = "#3498db"
+                arrow = ""
 
-        df_evolution = pd.DataFrame(evolution_data)
-        df_evolution["VersaoNum"] = df_evolution.groupby("Base Model").cumcount() + 1
-        df_evolution["VersaoLabel"] = "Versão " + df_evolution["VersaoNum"].astype(str)
+            fig, ax = plt.subplots(figsize=(2, 2), dpi=150)
+            ax.pie(
+                [selected_score, 100 - selected_score],
+                startangle=90,
+                colors=[color, "#f0f2f6"],
+                wedgeprops={"width": 0.15, "edgecolor": "white"}
+            )
+            ax.text(0, 0, f"{selected_score:.1f}{arrow}", ha='center', va='center', fontsize=16, fontweight="bold", color=color)
+            ax.axis("equal")
 
-        unique_versions = df_evolution["VersaoLabel"].unique()
-        palette = sns.color_palette("tab10", n_colors=len(unique_versions))
-        palette_colors = dict(zip(unique_versions, palette))
+            buf = io.BytesIO()
+            plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+            buf.seek(0)
+            plt.close(fig)
+            encoded = base64.b64encode(buf.getvalue()).decode()
+            img_html = f"<div style='text-align: center;'><img src='data:image/png;base64,{encoded}'></div>"
+            st.markdown(img_html, unsafe_allow_html=True)
 
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.barplot(
-            data=df_evolution,
-            x="Base Model",
-            y="Score",
-            hue="VersaoLabel",
-            dodge=True,
-            ax=ax,
-            palette=palette_colors
-        )
+            if on_avg_score is not None:
+                st.markdown(f"<p style='text-align: center; font-size: 1rem;'>Média da On: {on_avg_score:.1f}</p>", unsafe_allow_html=True)
 
-        min_score = df_evolution["Score"].min()
-        ax.set_ylim(bottom=max(min_score - 5, 0))
+    with col_v1:
+        st.markdown("<h1 style='text-align: center;'></h1>", unsafe_allow_html=True)
 
-        ax.set_title("Desempenho dos modelos conforme suas novas versões", fontsize=18)
-        ax.set_ylabel("Score")
-        ax.set_xlabel("Modelo Base")
-        ax.grid(True, axis='y', linestyle="--", alpha=0.3)
-        plt.xticks(rotation=45, ha="right")
-        ax.get_legend().set_title("")
+    with col_v2:
+        st.markdown("<h1 style='text-align: center;'></h1>", unsafe_allow_html=True)
 
-        st.pyplot(fig)
+    with col2:
+        model_evolution = load_json_file("model_score_evolution")
+        if model_evolution:
+            evolution_data = []
+            for base_model, versions in model_evolution.items():
+                for model_name, score in versions:
+                    clean_version = model_name.replace("On", "").strip()
+                    evolution_data.append({
+                        "Base Model": base_model.title(),
+                        "Version": clean_version,
+                        "Score": score
+                    })
 
-with col6:
-    dict_pros = load_json_file("positive_words")
-    plot_wordcloud_streamlit(dict_pros, "Principais Termos Positivos nas Avaliações")
+            df_evolution = pd.DataFrame(evolution_data)
+            df_evolution["VersaoNum"] = df_evolution.groupby("Base Model").cumcount() + 1
+            df_evolution["VersaoLabel"] = "V" + df_evolution["VersaoNum"].astype(str)
+
+            base_models = sorted(df_evolution["Base Model"].unique())
+            selected_base_model = st.selectbox("Modelo", base_models, index=0)
+
+            df_filtered = df_evolution[df_evolution["Base Model"] == selected_base_model]
+            fig, ax = plt.subplots(figsize=(2.8, 2.2))
+            sns.barplot(data=df_filtered, x="VersaoLabel", y="Score", ax=ax, palette="Blues_d")
+            ax.set_ylim(bottom=max(df_filtered["Score"].min() - 5, 0))
+            ax.set_title("", fontsize=10)
+            ax.set_ylabel("")
+            ax.set_xlabel("")
+            ax.tick_params(axis='x', labelsize=8)
+            ax.tick_params(axis='y', labelsize=8)
+            ax.grid(True, axis='y', linestyle="--", alpha=0.3)
+            st.pyplot(fig)
+
+    col3, col4 = st.columns([1, 1])
+
+    with col3:
+        word_scores = load_json_file("worst_on_comments")
+        sorted_words = sorted(word_scores.items(), key=lambda x: x[1])
+        df_words = pd.DataFrame(sorted_words, columns=["Comentário", "Nota"])
+        df_words["Nota"] = df_words["Nota"].round(1)
+        st.dataframe(df_words, use_container_width=True, hide_index=True, height=200)
+
+    with col4:
+        dict_pros = load_json_file("positive_words")
+        st.markdown("<div style='font-size: 10px;'>", unsafe_allow_html=True)
+        plot_wordcloud_streamlit(dict_pros, "")
