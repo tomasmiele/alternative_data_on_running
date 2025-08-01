@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 def load_json_file(filename):
-    with open(f"{filename}.json", "r") as f:
+    with open(f"{filename}.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 st.title("Análisede Alternativa *On Running*")
@@ -112,12 +112,68 @@ top_models_data = load_json_file("top_on_models")
 
 st.markdown(f"**Top Score:** {top_models_data['top_score']}")
 
-for model in top_models_data["models"]:
-    st.markdown(f"- **{model['Name']}** – *{model.get('Adjective', 'N/A')}*")
-    st.markdown(f"  - Score: {model['Score']}")
-    if pros := model.get("Pros"):
-        st.markdown("  - Pros: " + ", ".join(pros))
-    if cons := model.get("Cons"):
-        st.markdown("  - Cons: " + ", ".join(cons))
-    st.markdown("---")
+st.markdown("**Top Models:**")
+for model_name in top_models_data["models"]:
+    st.markdown(f"- **{model_name}**")
 
+# Comentários mais negativos
+worst_on_comments = load_json_file("worst_on_comments.json")
+
+st.header("Comentários mais Negativos (On)")
+
+st.markdown(f"**Menor nota encontrada:** {worst_on_comments['lowest_score']}")
+st.markdown("**Modelos com essa nota:**")
+for model in worst_on_comments["models"]:
+    st.markdown(f"- {model}")
+
+st.markdown("**Principais comentários negativos:**")
+for cons in worst_on_comments["comments"]:
+    st.markdown(f"- {cons}")
+
+# Gráfico de desempenho da evolução do modelo
+st.header("Evolução da nota dos modelos da On")
+
+model_evolution = load_json_file("model_score_evolution.json")
+
+if not model_evolution:
+    st.info("Nenhum modelo com múltiplas versões foi encontrado.")
+else:
+    selected_model = st.selectbox(
+        "Escolha um modelo base para visualizar a evolução:",
+        list(model_evolution.keys())
+    )
+
+    if selected_model:
+        versions = model_evolution[selected_model]
+        names = [v[0] for v in versions]
+        scores = [v[1] for v in versions]
+
+        df = pd.DataFrame({
+            "Model": names,
+            "Score": scores
+        })
+
+        # Plot com Matplotlib
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(df["Model"], df["Score"], marker="o")
+        ax.set_title(f"Evolução da nota – {selected_model.title()}")
+        ax.set_ylabel("Score")
+        ax.set_xlabel("Versão do modelo")
+        ax.grid(True)
+
+        st.pyplot(fig)
+
+# Associação de lifestyle e emoções com a marca
+st.header("Lifestyle & Emotional Mentions")
+
+mentions = load_json_file("emotion_lifestyle_mentions")
+
+st.subheader("Lifestyle Mentions")
+for item in mentions["lifestyle"]:
+    st.markdown(f"- **{item['model']}** → Palavras-chave: `{', '.join(item['matched_keywords'])}`")
+    st.markdown(f"  - Pros: {', '.join(item['pros'])}")
+
+st.subheader("Emotional Mentions")
+for item in mentions["emotion"]:
+    st.markdown(f"- **{item['model']}** → Palavras-chave: `{', '.join(item['matched_keywords'])}`")
+    st.markdown(f"  - Pros: {', '.join(item['pros'])}")

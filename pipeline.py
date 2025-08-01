@@ -77,20 +77,13 @@ def get_classification(pros_dict, cons_dict):
         cons[brand] = cleaned_words
         cons["total"].update(cleaned_words)
 
-    print("\n[+] Pros Word Count and Log Frequency")
     pros_counter = Counter(pros["total"])
     pros_tuples = list(pros_counter.items())
-    print(pros_tuples)
     compute_log_frequency(pros_tuples)
 
-    print("\n[-] Cons Word Count and Log Frequency")
     cons_counter = Counter(cons["total"])
     cons_tuples = list(cons_counter.items())
-    print(cons_tuples)
     compute_log_frequency(cons_tuples)
-
-    print(f"\nTotal unique words in pros: {len(pros_tuples)}")
-    print(f"Total unique words in cons: {len(cons_tuples)}")
 
     pros = {k: list(v) for k, v in pros.items()}
     cons = {k: list(v) for k, v in cons.items()}
@@ -306,12 +299,10 @@ def classify_on_performance(avg_table, margin=1.0):
 
     for category, subcategories in avg_table.items():
         result[category] = {}
-        for subcat, brands in subcategories.items():
-            if "On" not in brands:
-                continue
 
-            on_score = brands["On"]
-            other_scores = [score for brand, score in brands.items() if brand != "On"]
+        if "On" in subcategories:
+            on_score = subcategories["On"]
+            other_scores = [score for brand, score in subcategories.items() if brand != "On"]
 
             if not other_scores:
                 continue
@@ -325,11 +316,37 @@ def classify_on_performance(avg_table, margin=1.0):
             else:
                 status = "average"
 
-            result[category][subcat] = {
+            result[category]["Overall"] = {
                 "status": status,
                 "on_score": round(on_score, 2),
                 "others_avg": round(avg_others, 2)
             }
+
+        else:
+            for subcat, brands in subcategories.items():
+                if "On" not in brands:
+                    continue
+
+                on_score = brands["On"]
+                other_scores = [score for brand, score in brands.items() if brand != "On"]
+
+                if not other_scores:
+                    continue
+
+                avg_others = sum(other_scores) / len(other_scores)
+
+                if on_score > avg_others + margin:
+                    status = "above"
+                elif on_score < avg_others - margin:
+                    status = "below"
+                else:
+                    status = "average"
+
+                result[category][subcat] = {
+                    "status": status,
+                    "on_score": round(on_score, 2),
+                    "others_avg": round(avg_others, 2)
+                }
 
     return result
 
@@ -349,9 +366,9 @@ def get_top_rated_models(data, brand="On"):
 
             if score > top_score:
                 top_score = score
-                top_models = [shoe]
+                top_models = [shoe["Name"]]
             elif score == top_score:
-                top_models.append(shoe)
+                top_models.append(shoe["Name"])
 
     return {
         "brand": brand,
@@ -359,3 +376,97 @@ def get_top_rated_models(data, brand="On"):
         "models": top_models
     }
 
+def get_most_negative_comments(data, brand="On", top_k=3):
+    lowest_models = []
+    lowest_score = float("inf")
+
+    if brand not in data:
+        return {"brand": brand, "lowest_score": None, "comments": []}
+
+    for gender in data[brand]:
+        for shoe in data[brand][gender]:
+            try:
+                score = float(shoe.get("Score", 999))
+            except (ValueError, TypeError):
+                continue
+
+            if score < lowest_score:
+                lowest_score = score
+                lowest_models = [shoe]
+            elif score == lowest_score:
+                lowest_models.append(shoe)
+
+    all_cons = []
+    for model in lowest_models:
+        all_cons.extend(model.get("Cons", []))
+
+    return {
+        "brand": brand,
+        "lowest_score": lowest_score,
+        "comments": all_cons,
+        "models": [m["Name"] for m in lowest_models]
+    }
+
+def extract_base_name(name):
+    name = name.lower()
+    name = re.sub(r"\bon\b", "", name).strip()
+    return re.sub(r"\d+", "", name).strip()
+
+def build_model_evolution_table(data, brand="On"):
+    modelos = data.get(brand, {})
+    all_models = modelos.get("M", []) + modelos.get("F", [])
+
+    grouped = defaultdict(list)
+
+    for model in all_models:
+        base_name = extract_base_name(model["Name"])
+        try:
+            score = float(model["Score"])
+        except (ValueError, TypeError):
+            continue
+        grouped[base_name].append((model["Name"], score))
+
+    evolution = {}
+    for base, versions in grouped.items():
+        if len(versions) > 1:
+            versions_sorted = sorted(versions, key=lambda x: x[0])
+            evolution[base] = versions_sorted
+
+    return evolution
+
+LIFESTYLE_KEYWORDS = ["stylish", "daily use", "cool", "casual", "looks", "design", "fashion", "walking", "lifestyle"]
+EMOTION_KEYWORDS = ["love", "favorite", "amazing", "awesome", "perfect", "ironman", "comfortable", "obsessed", "happy"]
+
+def detect_emotion_lifestyle(data, brand="On"):
+    lifestyle_mentions = []
+    emotion_mentions = []
+
+    if brand not in data:
+        return {"brand": brand, "lifestyle": [], "emotion": []}
+
+    for gender in data[brand]:
+        for model in data[brand][gender]:
+            pros = " ".join(model.get("Pros", [])).lower()
+
+            matched_lifestyle = [word for word in LIFESTYLE_KEYWORDS if word in pros]
+            matched_emotion = [word for word in EMOTION_KEYWORDS if word in pros]
+
+            if matched_lifestyle:
+                lifestyle_mentions.append({
+                    "model": model["Name"],
+                    "matched_keywords": matched_lifestyle,
+                    "pros": model.get("Pros", [])
+                })
+
+            if matched_emotion:
+                emotion_mentions.append({
+                    "model": model["Name"],
+                    "matched_keywords": matched_emotion,
+                    "pros": model.get("Pros", [])
+                })
+
+    return {
+        "brand": brand,
+        "lifestyle": lifestyle_mentions,
+        "emotion": emotion_mentions
+    }

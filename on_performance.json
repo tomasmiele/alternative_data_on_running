@@ -1,0 +1,53 @@
+{
+  "brand": {
+    "Overall": {
+      "status": "above",
+      "on_score": 87.68,
+      "others_avg": 84.91
+    }
+  },
+  "terrain": {
+    "Road": {
+      "status": "above",
+      "on_score": 87.88,
+      "others_avg": 85.2
+    },
+    "Trail": {
+      "status": "above",
+      "on_score": 86.5,
+      "others_avg": 84.82
+    }
+  },
+  "pace": {
+    "Daily running / easy": {
+      "status": "above",
+      "on_score": 87.78,
+      "others_avg": 84.59
+    },
+    "Tempo / speed": {
+      "status": "above",
+      "on_score": 89.0,
+      "others_avg": 85.28
+    },
+    "Competition / race": {
+      "status": "above",
+      "on_score": 90.0,
+      "others_avg": 87.04
+    }
+  },
+  "year": {},
+  "masc": {
+    "Overall": {
+      "status": "above",
+      "on_score": 87.68,
+      "others_avg": 84.91
+    }
+  },
+  "fem": {
+    "Overall": {
+      "status": "above",
+      "on_score": 87.68,
+      "others_avg": 84.91
+    }
+  }
+}

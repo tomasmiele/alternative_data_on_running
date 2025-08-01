@@ -1,36 +1,41 @@
 import json
 from scraper import start_browser, get_reviews
-from pipeline import extract_pros_cons, get_classification, generate_difference_dictionaries, compute_score_aggregates_with_gender, compare_to_others, compare_others_below, classify_on_performance, get_top_rated_models, get_most_negative_comments, build_model_evolution_table
+from pipeline import extract_pros_cons, get_classification, generate_difference_dictionaries, compute_score_aggregates_with_gender, compare_to_others, compare_others_below, classify_on_performance, get_top_rated_models, get_most_negative_comments, build_model_evolution_table, detect_emotion_lifestyle
 
 def save_json(data, filename):
     with open(str(filename) + ".json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+def load_json(filename):
+    with open(f"{filename}.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
 if __name__ == "__main__":
-    data = {}
-    companies = ["On", "Hoka", "Nike", "Adidas", "New Balance"]
+    # data = {}
+    # companies = ["On", "Hoka", "Nike", "Adidas", "New Balance"]
 
-    for company in companies:
-        data[company] = {"M": {}, "F": {}}
+    # for company in companies:
+    #     data[company] = {"M": {}, "F": {}}
 
-    driver = start_browser()
-    data["On"]["M"] = get_reviews(driver, "on", "m")
-    data["On"]["F"] = get_reviews(driver, "on", "f")
-    data["Hoka"]["M"] = get_reviews(driver, "hoka", "m")
-    data["Hoka"]["F"] = get_reviews(driver, "hoka", "f")
-    data["Nike"]["M"] = get_reviews(driver, "nike", "m")
-    data["Nike"]["F"] = get_reviews(driver, "nike", "f")
-    data["Adidas"]["M"] = get_reviews(driver, "adidas", "m")
-    data["Adidas"]["F"] = get_reviews(driver, "adidas", "f")
-    data["New Balance"]["M"] = get_reviews(driver, "new-balance", "m")
-    data["New Balance"]["F"] = get_reviews(driver, "new-balance", "f")
-    driver.quit()
+    # driver = start_browser()
+    # data["On"]["M"] = get_reviews(driver, "on", "m")
+    # data["On"]["F"] = get_reviews(driver, "on", "f")
+    # data["Hoka"]["M"] = get_reviews(driver, "hoka", "m")
+    # data["Hoka"]["F"] = get_reviews(driver, "hoka", "f")
+    # data["Nike"]["M"] = get_reviews(driver, "nike", "m")
+    # data["Nike"]["F"] = get_reviews(driver, "nike", "f")
+    # data["Adidas"]["M"] = get_reviews(driver, "adidas", "m")
+    # data["Adidas"]["F"] = get_reviews(driver, "adidas", "f")
+    # data["New Balance"]["M"] = get_reviews(driver, "new-balance", "m")
+    # data["New Balance"]["F"] = get_reviews(driver, "new-balance", "f")
+    # driver.quit()
 
-    save_json(data, "data")
+    # save_json(data, "data")
+
+    data = load_json("data")
 
     pros_dict, cons_dict = extract_pros_cons(data)
     pros_class, cons_class = get_classification(pros_dict, cons_dict)
-    print(pros_class, "\n\n", pros_class)
     dict_pros, dict_cons = generate_difference_dictionaries(pros_class, cons_class)
 
     save_json(dict_pros, "positive_words")
@@ -51,3 +56,12 @@ if __name__ == "__main__":
 
     top_on_models = get_top_rated_models(data)
     save_json(top_on_models, "top_on_models")
+
+    worst_on_comments = get_most_negative_comments(data)
+    save_json(worst_on_comments, "worst_on_comments")
+
+    evolution_data = build_model_evolution_table(data, brand="On")
+    save_json(evolution_data, "model_score_evolution")
+
+    emotion_lifestyle_data = detect_emotion_lifestyle(data)
+    save_json(emotion_lifestyle_data, "emotion_lifestyle_mentions")
