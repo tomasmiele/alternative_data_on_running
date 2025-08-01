@@ -15,6 +15,7 @@ def load_json_file(filename):
 st.set_page_config(layout="wide")
 st.markdown("<style>div.block-container {padding-top: 1rem;}</style>", unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center;'>Análise de Alternativa <em>On Running</em></h1>", unsafe_allow_html=True)
+st.markdown("""<style>.stApp {background-color: #fcfcfc;}</style>""", unsafe_allow_html=True)
 
 avg_table = load_json_file("avg_table")
 brands = set()
