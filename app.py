@@ -1,7 +1,9 @@
 import streamlit as st
 import json
-from pipeline import plot_wordcloud_streamlit
+from pipeline import plot_wordcloud_streamlit, heatmap_dataframe
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def load_json_file(filename):
     with open(f"{filename}.json", "r") as f:
@@ -65,3 +67,21 @@ plot_wordcloud_streamlit(dict_pros, "Positivity")
 
 st.subheader("Words Indicating Negativity")
 plot_wordcloud_streamlit(dict_cons, "Negativity")
+
+# Mapa de calor para verificar oportunidades para a On Running
+
+st.header("Consistência de Avaliação por Categoria")
+
+df_heatmap = heatmap_dataframe(avg_table)
+
+selected_category = st.selectbox("Selecione uma categoria", df_heatmap["Categoria"].unique())
+
+pivot = df_heatmap[df_heatmap["Categoria"] == selected_category].pivot(
+    index="Subcategoria", columns="Marca", values="Nota Média"
+)
+
+st.write(f"### Heatmap: {selected_category}")
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
+st.pyplot(fig)
+

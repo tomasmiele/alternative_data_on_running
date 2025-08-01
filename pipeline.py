@@ -6,6 +6,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import streamlit as st
 from collections import defaultdict
+import pandas as pd
 
 stopwords_set = set(stopwords.words("english"))
 
@@ -283,3 +284,20 @@ def compare_others_below(data, brand="On"):
             check_and_add("gender", "feminino", data["fem"][brand], other_brand, other_score)
 
     return {k: dict(v) for k, v in result.items()}
+
+def heatmap_dataframe(avg_table):
+    records = []
+
+    for category, subdict in avg_table.items():
+        for subcat, brands in subdict.items():
+            for brand, score in brands.items():
+                records.append({
+                    "Categoria": category,
+                    "Subcategoria": subcat,
+                    "Marca": brand,
+                    "Nota Média": score
+                })
+
+    df = pd.DataFrame(records)
+    return df
+

@@ -1,9 +1,8 @@
 import json
 from scraper import start_browser, get_reviews
 from pipeline import extract_pros_cons, get_classification, generate_difference_dictionaries, compute_score_aggregates_with_gender, compare_to_others, compare_others_below
-
 def save_json(data, filename):
-    with open(str(filename) + ".json", "w") as f:
+    with open(str(filename) + ".json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
@@ -15,16 +14,18 @@ if __name__ == "__main__":
 
     driver = start_browser()
     data["On"]["M"] = get_reviews(driver, "on", "m")
-    # data["On"]["F"] = get_reviews(driver, "on", "f")
+    data["On"]["F"] = get_reviews(driver, "on", "f")
     data["Hoka"]["M"] = get_reviews(driver, "hoka", "m")
-    # data["Hoka"]["F"] = get_reviews(driver, "hoka", "f")
-    # data["Nike"]["M"] = get_reviews(driver, "nike", "m")
-    # data["Nike"]["F"] = get_reviews(driver, "nike", "f")
-    # data["Adidas"]["M"] = get_reviews(driver, "adidas", "m")
-    # data["Adidas"]["F"] = get_reviews(driver, "adidas", "f")
-    # data["New Balance"]["M"] = get_reviews(driver, "new-balance", "m")
-    # data["New Balance"]["F"] = get_reviews(driver, "new-balance", "f")
+    data["Hoka"]["F"] = get_reviews(driver, "hoka", "f")
+    data["Nike"]["M"] = get_reviews(driver, "nike", "m")
+    data["Nike"]["F"] = get_reviews(driver, "nike", "f")
+    data["Adidas"]["M"] = get_reviews(driver, "adidas", "m")
+    data["Adidas"]["F"] = get_reviews(driver, "adidas", "f")
+    data["New Balance"]["M"] = get_reviews(driver, "new-balance", "m")
+    data["New Balance"]["F"] = get_reviews(driver, "new-balance", "f")
     driver.quit()
+
+    save_json(data, "data")
 
     pros_dict, cons_dict = extract_pros_cons(data)
     pros_class, cons_class = get_classification(pros_dict, cons_dict)
