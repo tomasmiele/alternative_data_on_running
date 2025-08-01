@@ -332,3 +332,30 @@ def classify_on_performance(avg_table, margin=1.0):
             }
 
     return result
+
+def get_top_rated_models(data, brand="On"):
+    top_models = []
+    top_score = -1
+
+    if brand not in data:
+        return {"brand": brand, "top_score": None, "models": []}
+
+    for gender in data[brand]:
+        for shoe in data[brand][gender]:
+            try:
+                score = float(shoe.get("Score", -1))
+            except (ValueError, TypeError):
+                continue
+
+            if score > top_score:
+                top_score = score
+                top_models = [shoe]
+            elif score == top_score:
+                top_models.append(shoe)
+
+    return {
+        "brand": brand,
+        "top_score": top_score,
+        "models": top_models
+    }
+

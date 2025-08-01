@@ -48,3 +48,6 @@ if __name__ == "__main__":
 
     on_performance = classify_on_performance(avg_table)
     save_json(on_performance, "on_performance")
+
+    top_on_models = get_top_rated_models(data)
+    save_json(top_on_models, "top_on_models")

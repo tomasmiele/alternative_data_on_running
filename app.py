@@ -104,3 +104,20 @@ for category, subcats in performance.items():
         st.markdown(
             f"{icon} **{subcat}** – On: {info['on_score']} | Others' Average: {info['others_avg']} → *{info['status'].capitalize()}*"
         )
+
+# Melhor(es) tênis da On
+st.header("Best Rated On Running Shoes")
+
+top_models_data = load_json_file("top_on_models")
+
+st.markdown(f"**Top Score:** {top_models_data['top_score']}")
+
+for model in top_models_data["models"]:
+    st.markdown(f"- **{model['Name']}** – *{model.get('Adjective', 'N/A')}*")
+    st.markdown(f"  - Score: {model['Score']}")
+    if pros := model.get("Pros"):
+        st.markdown("  - Pros: " + ", ".join(pros))
+    if cons := model.get("Cons"):
+        st.markdown("  - Cons: " + ", ".join(cons))
+    st.markdown("---")
+
