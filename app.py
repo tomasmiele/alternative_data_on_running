@@ -109,6 +109,22 @@ with col2:
     st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
 
 with col3:
+    df_heatmap = heatmap_dataframe(avg_table)
+    selected_category = st.selectbox("", df_heatmap["Categoria"].unique(), label_visibility="collapsed")
+
+    pivot = df_heatmap[df_heatmap["Categoria"] == selected_category].pivot(
+        index="Subcategoria", columns="Marca", values="Nota Média"
+    )
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax, annot_kws={"size": 18})
+    ax.tick_params(axis='x', labelsize=18)
+    ax.tick_params(axis='y', labelsize=12)
+    st.pyplot(fig)
+
+col4, col5, col6 = st.columns(3)
+
+with col4:
     st.markdown("<h5 style='text-align: left;'>Comentários Negativos Mais Frequentes</h5>", unsafe_allow_html=True)
 
     word_scores = load_json_file("worst_on_comments")
@@ -119,12 +135,6 @@ with col3:
     df_words.reset_index(drop=True, inplace=True)
 
     st.dataframe(df_words, use_container_width=True, hide_index=True)
-
-col4, col5, col6 = st.columns(3)
-
-with col4:
-    dict_pros = load_json_file("positive_words")
-    plot_wordcloud_streamlit(dict_pros, "Principais Termos Positivos nas Avaliações")
 
 with col5:
     model_evolution = load_json_file("model_score_evolution")
@@ -143,15 +153,22 @@ with col5:
                 })
 
         df_evolution = pd.DataFrame(evolution_data)
+        df_evolution["VersaoNum"] = df_evolution.groupby("Base Model").cumcount() + 1
+        df_evolution["VersaoLabel"] = "Versão " + df_evolution["VersaoNum"].astype(str)
+
+        unique_versions = df_evolution["VersaoLabel"].unique()
+        palette = sns.color_palette("tab10", n_colors=len(unique_versions))
+        palette_colors = dict(zip(unique_versions, palette))
 
         fig, ax = plt.subplots(figsize=(10, 6))
         sns.barplot(
             data=df_evolution,
             x="Base Model",
             y="Score",
-            hue="Version",
+            hue="VersaoLabel",
             dodge=True,
-            ax=ax
+            ax=ax,
+            palette=palette_colors
         )
 
         min_score = df_evolution["Score"].min()
@@ -162,20 +179,10 @@ with col5:
         ax.set_xlabel("Modelo Base")
         ax.grid(True, axis='y', linestyle="--", alpha=0.3)
         plt.xticks(rotation=45, ha="right")
-        ax.get_legend().remove()
+        ax.get_legend().set_title("")
 
         st.pyplot(fig)
 
 with col6:
-    df_heatmap = heatmap_dataframe(avg_table)
-    selected_category = st.selectbox("", df_heatmap["Categoria"].unique(), label_visibility="collapsed")
-
-    pivot = df_heatmap[df_heatmap["Categoria"] == selected_category].pivot(
-        index="Subcategoria", columns="Marca", values="Nota Média"
-    )
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax, annot_kws={"size": 18})
-    ax.tick_params(axis='x', labelsize=18)
-    ax.tick_params(axis='y', labelsize=12)
-    st.pyplot(fig)
+    dict_pros = load_json_file("positive_words")
+    plot_wordcloud_streamlit(dict_pros, "Principais Termos Positivos nas Avaliações")
