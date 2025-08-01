@@ -4,6 +4,8 @@ from pipeline import plot_wordcloud_streamlit, heatmap_dataframe
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import io
+import base64
 
 def load_json_file(filename):
     with open(f"{filename}.json", "r", encoding="utf-8") as f:
@@ -47,12 +49,48 @@ with col1:
     st.dataframe(df)
 
 with col2:
-    st.subheader("Melhores Tênis da On")
     top_models_data = load_json_file("top_on_models")
-    st.markdown(f"**Top Score:** {top_models_data['top_score']}")
-    st.markdown("**Top Models:**")
-    for model_name in top_models_data["models"]:
-        st.markdown(f"- **{model_name}**")
+    top_score = top_models_data["top_score"]
+    top_models = top_models_data["models"]
+
+    if top_score > 85:
+        color = "#2ecc71"
+    elif top_score >= 50:
+        color = "#f1c40f"
+    else:
+        color = "#e74c3c"
+
+    st.markdown(
+        "<h5 style='text-align: center;'>Melhor Tênis da On</h5>",
+        unsafe_allow_html=True
+    )
+
+    fig, ax = plt.subplots(figsize=(1.5, 1.5), dpi=150)
+    ax.pie(
+        [top_score, 100 - top_score],
+        startangle=90,
+        colors=[color, "#f0f2f6"],
+        wedgeprops={"width": 0.12, "edgecolor": "white"}
+    )
+    ax.text(0, 0, f"{top_score}", ha='center', va='center', fontsize=12, fontweight="bold", color=color)
+    ax.axis("equal")
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+    buf.seek(0)
+    plt.close(fig)
+
+    encoded = base64.b64encode(buf.getvalue()).decode()
+    img_html = f"<div style='text-align: center;'><img src='data:image/png;base64,{encoded}'></div>"
+
+    st.markdown(img_html, unsafe_allow_html=True)
+
+    st.markdown(
+        f"<p style='text-align: center; font-size: 0.9rem;'>"
+        f"{' | '.join(f'<b>{model}</b>' for model in top_models)}"
+        f"</p>",
+        unsafe_allow_html=True
+    )
 
 with col3:
     st.subheader("Comentários Negativos Mais Frequentes da On")
@@ -97,7 +135,7 @@ with col5:
         min_score = df_evolution["Score"].min()
         ax.set_ylim(bottom=max(min_score - 5, 0))
 
-        ax.set_title("Notas das Versões por Modelo Base – On", fontsize=14)
+        ax.set_title("Desempenho dos modelos conforme suas novas versões", fontsize=18)
         ax.set_ylabel("Score")
         ax.set_xlabel("Modelo Base")
         ax.grid(True, axis='y', linestyle="--", alpha=0.3)
@@ -108,7 +146,7 @@ with col5:
 
 with col6:
     df_heatmap = heatmap_dataframe(avg_table)
-    selected_category = st.selectbox("Selecione uma categoria", df_heatmap["Categoria"].unique())
+    selected_category = st.selectbox("", df_heatmap["Categoria"].unique(), label_visibility="collapsed")
 
     pivot = df_heatmap[df_heatmap["Categoria"] == selected_category].pivot(
         index="Subcategoria", columns="Marca", values="Nota Média"
