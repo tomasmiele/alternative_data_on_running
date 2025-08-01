@@ -57,7 +57,6 @@ st.title("Média de Notas por Marca e Categoria")
 st.dataframe(df)
 
 # Palavras mais utilizadas para descrever os tenis da On em aspectos positivos e negativos
-
 st.title("WordCloud – Shoe Review Analysis")
 
 dict_pros, dict_cons = load_json_file("positive_words"), load_json_file("negative_words")
@@ -69,7 +68,6 @@ st.subheader("Words Indicating Negativity")
 plot_wordcloud_streamlit(dict_cons, "Negativity")
 
 # Mapa de calor para verificar oportunidades para a On Running
-
 st.header("Consistência de Avaliação por Categoria")
 
 df_heatmap = heatmap_dataframe(avg_table)
@@ -86,8 +84,7 @@ sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
 st.pyplot(fig)
 
 # Marcador de performance comparado a média das outras empresas
-
-st.header("🎯 On's Performance Marker by Category")
+st.header("On's Performance Marker by Category")
 
 performance = load_json_file("on_performance")
 
@@ -98,12 +95,21 @@ status_icons = {
 }
 
 for category, subcats in performance.items():
+    valid_items = {
+        subcat: info for subcat, info in subcats.items()
+        if "status" in info and "on_score" in info and "others_avg" in info
+    }
+
+    if not valid_items:
+        continue
+
     st.subheader(f"{category.title()}")
-    for subcat, info in subcats.items():
-        icon = status_icons[info["status"]]
+    for subcat, info in valid_items.items():
+        icon = status_icons.get(info["status"], "⬜️")
         st.markdown(
             f"{icon} **{subcat}** – On: {info['on_score']} | Others' Average: {info['others_avg']} → *{info['status'].capitalize()}*"
         )
+
 
 # Melhor(es) tênis da On
 st.header("Best Rated On Running Shoes")
@@ -117,63 +123,62 @@ for model_name in top_models_data["models"]:
     st.markdown(f"- **{model_name}**")
 
 # Comentários mais negativos
-worst_on_comments = load_json_file("worst_on_comments.json")
+st.header("Comentários Negativos Mais Frequentes (On)")
 
-st.header("Comentários mais Negativos (On)")
+worst_comments = load_json_file("worst_on_comments")
 
-st.markdown(f"**Menor nota encontrada:** {worst_on_comments['lowest_score']}")
-st.markdown("**Modelos com essa nota:**")
-for model in worst_on_comments["models"]:
-    st.markdown(f"- {model}")
-
-st.markdown("**Principais comentários negativos:**")
-for cons in worst_on_comments["comments"]:
-    st.markdown(f"- {cons}")
+st.markdown("**Comentários mais citados nos reviews negativos:**")
+for comment in worst_comments:
+    st.markdown(f"- {comment}")
 
 # Gráfico de desempenho da evolução do modelo
 st.header("Evolução da nota dos modelos da On")
 
-model_evolution = load_json_file("model_score_evolution.json")
+model_evolution = load_json_file("model_score_evolution")
 
 if not model_evolution:
     st.info("Nenhum modelo com múltiplas versões foi encontrado.")
 else:
-    selected_model = st.selectbox(
-        "Escolha um modelo base para visualizar a evolução:",
-        list(model_evolution.keys())
+    evolution_data = []
+    for base_model, versions in model_evolution.items():
+        for model_name, score in versions:
+            clean_version = model_name.replace("On", "").strip()
+            evolution_data.append({
+                "Base Model": base_model.title(),
+                "Version": clean_version,
+                "Score": score
+            })
+
+    df_evolution = pd.DataFrame(evolution_data)
+
+    available_models = sorted(df_evolution["Base Model"].unique())
+    selected_models = st.multiselect(
+        "Selecione os modelos base para visualizar:",
+        available_models,
+        default=available_models
     )
 
-    if selected_model:
-        versions = model_evolution[selected_model]
-        names = [v[0] for v in versions]
-        scores = [v[1] for v in versions]
+    if selected_models:
+        filtered_df = df_evolution[df_evolution["Base Model"].isin(selected_models)]
 
-        df = pd.DataFrame({
-            "Model": names,
-            "Score": scores
-        })
+        fig, ax = plt.subplots(figsize=(20, 8))
+        sns.barplot(
+            data=filtered_df,
+            x="Base Model",
+            y="Score",
+            hue="Version",
+            dodge=True,
+            ax=ax
+        )
 
-        # Plot com Matplotlib
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(df["Model"], df["Score"], marker="o")
-        ax.set_title(f"Evolução da nota – {selected_model.title()}")
+        ax.set_title("Notas das Versões por Modelo Base – On", fontsize=16)
         ax.set_ylabel("Score")
-        ax.set_xlabel("Versão do modelo")
-        ax.grid(True)
+        ax.set_xlabel("Modelo Base")
+        ax.grid(True, axis='y', linestyle="--", alpha=0.3)
+        plt.xticks(rotation=45, ha="right")
+
+        ax.get_legend().remove()
 
         st.pyplot(fig)
-
-# Associação de lifestyle e emoções com a marca
-st.header("Lifestyle & Emotional Mentions")
-
-mentions = load_json_file("emotion_lifestyle_mentions")
-
-st.subheader("Lifestyle Mentions")
-for item in mentions["lifestyle"]:
-    st.markdown(f"- **{item['model']}** → Palavras-chave: `{', '.join(item['matched_keywords'])}`")
-    st.markdown(f"  - Pros: {', '.join(item['pros'])}")
-
-st.subheader("Emotional Mentions")
-for item in mentions["emotion"]:
-    st.markdown(f"- **{item['model']}** → Palavras-chave: `{', '.join(item['matched_keywords'])}`")
-    st.markdown(f"  - Pros: {', '.join(item['pros'])}")
+    else:
+        st.info("Selecione pelo menos um modelo base para visualizar o gráfico.")

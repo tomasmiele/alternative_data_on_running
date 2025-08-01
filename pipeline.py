@@ -279,20 +279,26 @@ def compare_others_below(data, brand="On"):
     return {k: dict(v) for k, v in result.items()}
 
 def heatmap_dataframe(avg_table):
-    records = []
+    rows = []
 
-    for category, subdict in avg_table.items():
-        for subcat, brands in subdict.items():
+    for category, subcats in avg_table.items():
+        if category in ["brand", "masc", "fem"] or not isinstance(subcats, dict):
+            continue
+
+        for subcat, brands in subcats.items():
+            if not isinstance(brands, dict):
+                continue
+
             for brand, score in brands.items():
-                records.append({
+                rows.append({
                     "Categoria": category,
                     "Subcategoria": subcat,
                     "Marca": brand,
                     "Nota Média": score
                 })
 
-    df = pd.DataFrame(records)
-    return df
+    return pd.DataFrame(rows)
+
 
 def classify_on_performance(avg_table, margin=1.0):
     result = {}
@@ -364,11 +370,15 @@ def get_top_rated_models(data, brand="On"):
             except (ValueError, TypeError):
                 continue
 
+            name = shoe.get("Name")
+            if name is None:
+                continue
+
             if score > top_score:
                 top_score = score
-                top_models = [shoe["Name"]]
-            elif score == top_score:
-                top_models.append(shoe["Name"])
+                top_models = [name]
+            elif score == top_score and name not in top_models:
+                top_models.append(name)
 
     return {
         "brand": brand,
@@ -376,36 +386,20 @@ def get_top_rated_models(data, brand="On"):
         "models": top_models
     }
 
-def get_most_negative_comments(data, brand="On", top_k=3):
-    lowest_models = []
-    lowest_score = float("inf")
+def get_most_negative_comments(data, brand="On", top_k=5):
+    all_cons = []
 
     if brand not in data:
-        return {"brand": brand, "lowest_score": None, "comments": []}
+        return []
 
     for gender in data[brand]:
         for shoe in data[brand][gender]:
-            try:
-                score = float(shoe.get("Score", 999))
-            except (ValueError, TypeError):
-                continue
+            cons = shoe.get("Cons", [])
+            all_cons.extend(cons)
 
-            if score < lowest_score:
-                lowest_score = score
-                lowest_models = [shoe]
-            elif score == lowest_score:
-                lowest_models.append(shoe)
-
-    all_cons = []
-    for model in lowest_models:
-        all_cons.extend(model.get("Cons", []))
-
-    return {
-        "brand": brand,
-        "lowest_score": lowest_score,
-        "comments": all_cons,
-        "models": [m["Name"] for m in lowest_models]
-    }
+    counter = Counter(all_cons)
+    most_common = [comment for comment, _ in counter.most_common(top_k)]
+    return most_common
 
 def extract_base_name(name):
     name = name.lower()
@@ -419,54 +413,20 @@ def build_model_evolution_table(data, brand="On"):
     grouped = defaultdict(list)
 
     for model in all_models:
-        base_name = extract_base_name(model["Name"])
         try:
-            score = float(model["Score"])
+            score = float(model.get("Score"))
+            name = model.get("Name", "").strip()
+            base_name = extract_base_name(name)
+
+            if name not in [m[0] for m in grouped[base_name]]:
+                grouped[base_name].append((name, score))
         except (ValueError, TypeError):
             continue
-        grouped[base_name].append((model["Name"], score))
 
-    evolution = {}
-    for base, versions in grouped.items():
-        if len(versions) > 1:
-            versions_sorted = sorted(versions, key=lambda x: x[0])
-            evolution[base] = versions_sorted
+    evolution = {
+        base: sorted(versions, key=lambda x: x[0])
+        for base, versions in grouped.items()
+        if len(versions) > 1
+    }
 
     return evolution
-
-LIFESTYLE_KEYWORDS = ["stylish", "daily use", "cool", "casual", "looks", "design", "fashion", "walking", "lifestyle"]
-EMOTION_KEYWORDS = ["love", "favorite", "amazing", "awesome", "perfect", "ironman", "comfortable", "obsessed", "happy"]
-
-def detect_emotion_lifestyle(data, brand="On"):
-    lifestyle_mentions = []
-    emotion_mentions = []
-
-    if brand not in data:
-        return {"brand": brand, "lifestyle": [], "emotion": []}
-
-    for gender in data[brand]:
-        for model in data[brand][gender]:
-            pros = " ".join(model.get("Pros", [])).lower()
-
-            matched_lifestyle = [word for word in LIFESTYLE_KEYWORDS if word in pros]
-            matched_emotion = [word for word in EMOTION_KEYWORDS if word in pros]
-
-            if matched_lifestyle:
-                lifestyle_mentions.append({
-                    "model": model["Name"],
-                    "matched_keywords": matched_lifestyle,
-                    "pros": model.get("Pros", [])
-                })
-
-            if matched_emotion:
-                emotion_mentions.append({
-                    "model": model["Name"],
-                    "matched_keywords": matched_emotion,
-                    "pros": model.get("Pros", [])
-                })
-
-    return {
-        "brand": brand,
-        "lifestyle": lifestyle_mentions,
-        "emotion": emotion_mentions
-    }
