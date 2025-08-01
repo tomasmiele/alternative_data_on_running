@@ -301,3 +301,34 @@ def heatmap_dataframe(avg_table):
     df = pd.DataFrame(records)
     return df
 
+def classify_on_performance(avg_table, margin=1.0):
+    result = {}
+
+    for category, subcategories in avg_table.items():
+        result[category] = {}
+        for subcat, brands in subcategories.items():
+            if "On" not in brands:
+                continue
+
+            on_score = brands["On"]
+            other_scores = [score for brand, score in brands.items() if brand != "On"]
+
+            if not other_scores:
+                continue
+
+            avg_others = sum(other_scores) / len(other_scores)
+
+            if on_score > avg_others + margin:
+                status = "above"
+            elif on_score < avg_others - margin:
+                status = "below"
+            else:
+                status = "average"
+
+            result[category][subcat] = {
+                "status": status,
+                "on_score": round(on_score, 2),
+                "others_avg": round(avg_others, 2)
+            }
+
+    return result

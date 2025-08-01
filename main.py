@@ -1,6 +1,7 @@
 import json
 from scraper import start_browser, get_reviews
-from pipeline import extract_pros_cons, get_classification, generate_difference_dictionaries, compute_score_aggregates_with_gender, compare_to_others, compare_others_below
+from pipeline import extract_pros_cons, get_classification, generate_difference_dictionaries, compute_score_aggregates_with_gender, compare_to_others, compare_others_below, classify_on_performance, get_top_rated_models, get_most_negative_comments, build_model_evolution_table
+
 def save_json(data, filename):
     with open(str(filename) + ".json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -44,3 +45,6 @@ if __name__ == "__main__":
 
     save_json(on_vs_others, "on_vs_others")
     save_json(below_on, "below_on")
+
+    on_performance = classify_on_performance(avg_table)
+    save_json(on_performance, "on_performance")

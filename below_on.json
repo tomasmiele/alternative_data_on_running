@@ -1,16 +1,61 @@
 {
   "Hoka": {
     "terrain": [
-      "Hoka est\u00e1 1.8 pontos abaixo da On na categoria Road (terrain)",
-      "Hoka est\u00e1 2.8 pontos abaixo da On na categoria Trail (terrain)"
+      "Hoka está 1.8 pontos abaixo da On na categoria Road (terrain)",
+      "Hoka está 2.8 pontos abaixo da On na categoria Trail (terrain)"
     ],
     "pace": [
-      "Hoka est\u00e1 1.9 pontos abaixo da On na categoria Daily running / easy (pace)",
-      "Hoka est\u00e1 2.7 pontos abaixo da On na categoria Tempo / speed (pace)",
-      "Hoka est\u00e1 3.4 pontos abaixo da On na categoria Competition / race (pace)"
+      "Hoka está 1.9 pontos abaixo da On na categoria Daily running / easy (pace)",
+      "Hoka está 2.7 pontos abaixo da On na categoria Tempo / speed (pace)",
+      "Hoka está 3.4 pontos abaixo da On na categoria Competition / race (pace)"
     ],
     "gender": [
-      "Hoka est\u00e1 2.4 pontos abaixo da On na categoria masculino (gender)"
+      "Hoka está 2.4 pontos abaixo da On na categoria masculino (gender)",
+      "Hoka está 2.4 pontos abaixo da On na categoria feminino (gender)"
+    ]
+  },
+  "Nike": {
+    "terrain": [
+      "Nike está 4.7 pontos abaixo da On na categoria Road (terrain)",
+      "Nike está 2.2 pontos abaixo da On na categoria Trail (terrain)"
+    ],
+    "pace": [
+      "Nike está 5.4 pontos abaixo da On na categoria Daily running / easy (pace)",
+      "Nike está 6.3 pontos abaixo da On na categoria Tempo / speed (pace)",
+      "Nike está 3.8 pontos abaixo da On na categoria Competition / race (pace)"
+    ],
+    "gender": [
+      "Nike está 4.2 pontos abaixo da On na categoria masculino (gender)",
+      "Nike está 4.2 pontos abaixo da On na categoria feminino (gender)"
+    ]
+  },
+  "Adidas": {
+    "terrain": [
+      "Adidas está 1.3 pontos abaixo da On na categoria Road (terrain)"
+    ],
+    "pace": [
+      "Adidas está 1.8 pontos abaixo da On na categoria Daily running / easy (pace)",
+      "Adidas está 2.6 pontos abaixo da On na categoria Tempo / speed (pace)",
+      "Adidas está 0.9 pontos abaixo da On na categoria Competition / race (pace)"
+    ],
+    "gender": [
+      "Adidas está 1.0 pontos abaixo da On na categoria masculino (gender)",
+      "Adidas está 1.0 pontos abaixo da On na categoria feminino (gender)"
+    ]
+  },
+  "New Balance": {
+    "terrain": [
+      "New Balance está 2.9 pontos abaixo da On na categoria Road (terrain)",
+      "New Balance está 4.7 pontos abaixo da On na categoria Trail (terrain)"
+    ],
+    "pace": [
+      "New Balance está 3.7 pontos abaixo da On na categoria Daily running / easy (pace)",
+      "New Balance está 3.3 pontos abaixo da On na categoria Tempo / speed (pace)",
+      "New Balance está 3.8 pontos abaixo da On na categoria Competition / race (pace)"
+    ],
+    "gender": [
+      "New Balance está 3.5 pontos abaixo da On na categoria masculino (gender)",
+      "New Balance está 3.5 pontos abaixo da On na categoria feminino (gender)"
     ]
   }
 }

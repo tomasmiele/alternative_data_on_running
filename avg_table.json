@@ -1,36 +1,63 @@
 {
   "brand": {
     "On": 87.68,
-    "Hoka": 85.31
+    "Hoka": 85.31,
+    "Nike": 83.46,
+    "Adidas": 86.72,
+    "New Balance": 84.15
   },
   "terrain": {
     "Road": {
       "On": 87.88,
-      "Hoka": 86.13
+      "Hoka": 86.13,
+      "Nike": 83.18,
+      "Adidas": 86.57,
+      "New Balance": 84.94
     },
     "Trail": {
       "On": 86.5,
-      "Hoka": 83.67
+      "Hoka": 83.67,
+      "Nike": 84.29,
+      "Adidas": 89.5,
+      "New Balance": 81.83
     }
   },
   "pace": {
     "Daily running / easy": {
       "On": 87.78,
-      "Hoka": 85.88
+      "Hoka": 85.88,
+      "Nike": 82.38,
+      "Adidas": 86.0,
+      "New Balance": 84.12
     },
     "Tempo / speed": {
       "On": 89.0,
-      "Hoka": 86.3
+      "Hoka": 86.3,
+      "Nike": 82.71,
+      "Adidas": 86.4,
+      "New Balance": 85.73
     },
     "Competition / race": {
       "On": 90.0,
-      "Hoka": 86.6
+      "Hoka": 86.6,
+      "Nike": 86.25,
+      "Adidas": 89.07,
+      "New Balance": 86.25
     }
   },
   "year": {},
   "masc": {
     "On": 87.68,
-    "Hoka": 85.31
+    "Hoka": 85.31,
+    "Nike": 83.46,
+    "Adidas": 86.72,
+    "New Balance": 84.15
   },
-  "fem": {}
+  "fem": {
+    "On": 87.68,
+    "Hoka": 85.31,
+    "Nike": 83.46,
+    "Adidas": 86.72,
+    "New Balance": 84.15
+  }
 }

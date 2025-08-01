@@ -85,3 +85,22 @@ fig, ax = plt.subplots(figsize=(10, 6))
 sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
 st.pyplot(fig)
 
+# Marcador de performance comparado a média das outras empresas
+
+st.header("🎯 On's Performance Marker by Category")
+
+performance = load_json_file("on_performance")
+
+status_icons = {
+    "above": "🟩",
+    "average": "🟨",
+    "below": "🟥"
+}
+
+for category, subcats in performance.items():
+    st.subheader(f"{category.title()}")
+    for subcat, info in subcats.items():
+        icon = status_icons[info["status"]]
+        st.markdown(
+            f"{icon} **{subcat}** – On: {info['on_score']} | Others' Average: {info['others_avg']} → *{info['status'].capitalize()}*"
+        )
