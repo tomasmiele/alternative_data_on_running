@@ -12,7 +12,7 @@ from scipy.spatial.distance import pdist
 st.set_page_config(layout="wide")
 st.markdown("""<style>
     div.block-container {padding-top: 1rem;}
-    .stApp {background-color: #fcfcfc;}
+    .stApp {background-color: #1F2A35; color: #ecf0f1;}
     section.main > div {padding-top: 0rem;}
 </style>""", unsafe_allow_html=True)
 
@@ -24,7 +24,7 @@ st.markdown("""
     [data-testid="stSidebar"] {
         min-width: 160px !important;
         max-width: 160px !important;
-        background-color: #f2f2f2;
+        background-color: #ecf0f1;
         padding-top: 30vh !important;
     }
     .sidebar-buttons button {
@@ -33,6 +33,22 @@ st.markdown("""
         margin: 8px auto !important;
         display: block;
         font-size: 14px !important;
+        color: #1F2A35 !important;
+    }
+    .stSelectbox label {
+        color: #1F2A35 !important;
+    }
+    .stSelectbox div[role="combobox"] {
+        color: #1F2A35 !important;
+    }
+    .stMultiSelect > label {
+        color: #1F2A35 !important;
+    }
+    .stMultiSelect div[role="combobox"] {
+        color: #3498db !important;
+    }
+    .stSelectbox div[data-baseweb="select"] > div {
+        text-transform: uppercase;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -97,6 +113,7 @@ if st.session_state.current_tab == "competitor":
         sns.heatmap(pivot, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax, annot_kws={"size": 12})
         ax.tick_params(axis='x', labelsize=10)
         ax.tick_params(axis='y', labelsize=9)
+        ax.grid(False)
         st.pyplot(fig)
 
     with col2:
@@ -112,7 +129,7 @@ if st.session_state.current_tab == "competitor":
         ax.set_ylabel("Avg Score")
         ax.set_xlabel("")
         ax.tick_params(axis='x', rotation=45)
-        ax.grid(True, axis='y', linestyle='--', alpha=0.3)
+        ax.grid(False)
         st.pyplot(fig)
 
 elif st.session_state.current_tab == "on":
@@ -193,7 +210,7 @@ elif st.session_state.current_tab == "on":
             ax.set_xlabel("")
             ax.tick_params(axis='x', labelsize=8)
             ax.tick_params(axis='y', labelsize=8)
-            ax.grid(True, axis='y', linestyle="--", alpha=0.3)
+            ax.grid(False)
             st.pyplot(fig)
 
     col3, col4 = st.columns([1, 1])
@@ -209,7 +226,7 @@ elif st.session_state.current_tab == "on":
                     selected_cons = shoe.get("Cons", [])
                     break
 
-        st.markdown(f"### Comentários do – **{selected_model}**", unsafe_allow_html=True)
+        st.markdown(f"### Comments for – **{selected_model}**", unsafe_allow_html=True)
         col_pros, col_cons = st.columns(2)
 
         with col_pros:
@@ -221,7 +238,6 @@ elif st.session_state.current_tab == "on":
             st.markdown("### Cons")
             for item in selected_cons:
                 st.markdown(f"- {item}")
-
 
     with col4:
         scores_by_year = []
@@ -256,7 +272,7 @@ elif st.session_state.current_tab == "on":
             ax.set_xlabel("")
             ax.set_xticks(avg_by_year["Year"])
             ax.tick_params(labelsize=9)
-            ax.grid(True, axis="y", linestyle="--", alpha=0.3)
+            ax.grid(False)
             st.pyplot(fig)
         else:
             st.info("No release year data available.")
