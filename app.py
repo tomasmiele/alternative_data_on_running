@@ -38,6 +38,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 with st.sidebar:
+    st.image("img/logo.png", width=140)
     st.markdown("<div class='sidebar-buttons'>", unsafe_allow_html=True)
     if st.button("Competitor", key="competitor"):
         st.session_state.current_tab = "competitor"
@@ -198,11 +199,29 @@ elif st.session_state.current_tab == "on":
     col3, col4 = st.columns([1, 1])
 
     with col3:
-        word_scores = load_json_file("worst_on_comments")
-        sorted_words = sorted(word_scores.items(), key=lambda x: x[1])
-        df_words = pd.DataFrame(sorted_words, columns=["Comment", "Avg Score"])
-        df_words["Avg Score"] = df_words["Avg Score"].round(1)
-        st.dataframe(df_words, use_container_width=True, hide_index=True, height=200)
+        selected_pros = []
+        selected_cons = []
+
+        for gender in ["M", "F"]:
+            for shoe in data["On"].get(gender, []):
+                if shoe.get("Name") == selected_model:
+                    selected_pros = shoe.get("Pros", [])
+                    selected_cons = shoe.get("Cons", [])
+                    break
+
+        st.markdown(f"### Comentários do – **{selected_model}**", unsafe_allow_html=True)
+        col_pros, col_cons = st.columns(2)
+
+        with col_pros:
+            st.markdown("### Pros")
+            for item in selected_pros:
+                st.markdown(f"- {item}")
+
+        with col_cons:
+            st.markdown("### Cons")
+            for item in selected_cons:
+                st.markdown(f"- {item}")
+
 
     with col4:
         scores_by_year = []
